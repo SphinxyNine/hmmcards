@@ -35,6 +35,7 @@ button:focus-visible { outline: 3px solid #2f62ff; outline-offset: 3px; }
 }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; min-height: 44px; }
+.header-actions { display: flex; align-items: center; gap: 9px; }
 .brand-lockup { display: flex; align-items: center; gap: 13px; }
 .wordmark { display: flex; align-items: center; gap: 8px; font-family: Arial Black, Arial, sans-serif; font-weight: 900; letter-spacing: -.09em; font-size: 23px; }
 .wordmark i { width: 9px; height: 9px; border-radius: 50%; background: #ff674d; display: block; }
@@ -44,6 +45,8 @@ button:focus-visible { outline: 3px solid #2f62ff; outline-offset: 3px; }
 .menu-button span { display: block; width: 15px; height: 1.5px; background: var(--ink); transition: width .2s; }
 .menu-button span:last-child { width: 9px; justify-self: end; margin-right: 8px; }
 .menu-button:hover span:last-child { width: 15px; margin-right: 0; }
+.present-button { display: none; height: 43px; align-items: center; gap: 8px; border: 1.5px solid var(--ink); border-radius: 99px; background: #f7f2e8; padding: 0 16px 0 12px; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.present-button b { font-size: 17px; line-height: 1; }
 
 .stage { display: grid; place-items: center; position: relative; min-height: 0; touch-action: pan-y; user-select: none; }
 .card-stack { position: absolute; width: calc(100% - 23px); height: min(68svh, 610px); pointer-events: none; }
@@ -73,9 +76,10 @@ button:focus-visible { outline: 3px solid #2f62ff; outline-offset: 3px; }
 h1 { margin: 0; max-width: 11ch; font-family: Georgia, Times New Roman, serif; font-size: clamp(36px, 10.8vw, 60px); font-weight: 400; line-height: .98; letter-spacing: -.055em; }
 .wisdom { align-self: flex-start; margin: auto 0 28px; max-width: 100%; border: 0; border-bottom: 1px solid currentColor; background: transparent; padding: 0 0 5px; font-size: 12px; font-weight: 800; cursor: pointer; }
 .wisdom span { padding-right: 4px; }
-.wisdom-face blockquote { margin: 0; max-width: 12ch; font-family: Georgia, Times New Roman, serif; font-size: clamp(34px, 9.8vw, 53px); font-style: italic; line-height: 1; letter-spacing: -.055em; }
+.wisdom-face blockquote { margin: 0; max-width: 24ch; font-family: Georgia, Times New Roman, serif; font-size: clamp(27px, 7.7vw, 42px); font-style: normal; line-height: 1.08; letter-spacing: -.04em; }
+.wisdom-face blockquote.wisdom-long { font-size: clamp(24px, 6.8vw, 36px); line-height: 1.12; }
 .wisdom-face .eyebrow { margin-top: clamp(44px, 8svh, 76px); }
-.wisdom-note { max-width: 30ch; margin: 20px 0 0; font-size: 11px; line-height: 1.45; font-weight: 700; }
+.wisdom-note { max-width: 42ch; margin: 18px 0 0; font-size: 11px; line-height: 1.45; font-weight: 700; opacity: .65; }
 
 .controls { display: grid; grid-template-columns: 52px 1fr 52px; gap: 9px; }
 .round-button { height: 52px; border-radius: 50%; font-size: 20px; position: relative; }
@@ -137,21 +141,24 @@ h1 { margin: 0; max-width: 11ch; font-family: Georgia, Times New Roman, serif; f
 @keyframes sheet-up { from { transform: translateY(30px); opacity: .7; } }
 
 @media (min-width: 700px) {
-  .app-shell { max-width: 980px; box-shadow: 0 0 90px #756f6570; padding: 25px 42px 20px; gap: 19px; }
+  body { background: var(--paper); }
+  .app-shell { width: 100%; max-width: none; box-shadow: none; padding: 24px 42px 18px; gap: 14px; }
   .topbar { padding-top: 3px; }
   .wordmark { font-size: 29px; }
   .wordmark i { width: 11px; height: 11px; }
   .brand-note { font-size: 9px; }
   .menu-button { width: 49px; height: 49px; }
-  .card-stack { width: min(690px, calc(100% - 96px)); height: min(69svh, 680px); }
-  .question-card { width: min(690px, calc(100% - 96px)); min-height: min(67svh, 658px); max-height: 700px; border-radius: 36px; padding: 32px 35px 26px; }
+  .present-button { display: flex; height: 49px; }
+  .card-stack { width: min(820px, calc(100% - 96px)); height: clamp(500px, calc(100svh - 205px), 720px); }
+  .question-card { width: min(820px, calc(100% - 96px)); height: clamp(480px, calc(100svh - 225px), 700px); min-height: 0; max-height: none; border-radius: 36px; padding: 32px 35px 26px; }
   .card-stack i { border-radius: 36px; }
   .card-meta, .card-foot { font-size: 10px; }
   .eyebrow { margin-top: clamp(65px, 10svh, 105px); font-size: 11px; }
   h1 { font-size: clamp(55px, 7.3vw, 76px); max-width: 12ch; }
-  .wisdom-face blockquote { font-size: clamp(50px, 6.7vw, 70px); max-width: 13ch; }
+  .wisdom-face blockquote { font-size: clamp(34px, 4.2vw, 50px); max-width: 24ch; }
+  .wisdom-face blockquote.wisdom-long { font-size: clamp(30px, 3.6vw, 43px); max-width: 28ch; }
   .wisdom, .wisdom-note { font-size: 13px; }
-  .controls, .progress { width: min(690px, calc(100% - 96px)); margin-inline: auto; }
+  .controls, .progress { width: min(820px, calc(100% - 96px)); margin-inline: auto; }
   .controls { grid-template-columns: 60px 1fr 60px; gap: 12px; }
   .round-button, .next-button { height: 60px; }
   .sheet-wrap { align-items: center; padding: 28px; }
@@ -167,14 +174,19 @@ h1 { margin: 0; max-width: 11ch; font-family: Georgia, Times New Roman, serif; f
 }
 
 @media (min-width: 1100px) {
-  .app-shell { max-width: 1180px; padding-inline: 64px; }
-  .card-stack, .question-card { width: min(780px, 70vw); }
-  .card-stack { height: min(72svh, 730px); }
-  .question-card { min-height: min(70svh, 708px); max-height: 750px; padding: 38px 43px 30px; }
-  h1 { font-size: clamp(66px, 5.7vw, 86px); }
-  .wisdom-face blockquote { font-size: clamp(58px, 5.2vw, 78px); }
-  .controls, .progress { width: min(780px, 70vw); }
+  .app-shell { width: 100%; max-width: none; padding: 22px clamp(48px, 5vw, 96px) 18px; }
+  .topbar { width: 100%; max-width: 1600px; margin-inline: auto; }
+  .card-stack, .question-card { width: clamp(900px, 74vw, 1320px); }
+  .card-stack { height: clamp(540px, calc(100svh - 190px), 800px); }
+  .question-card { height: clamp(520px, calc(100svh - 210px), 780px); padding: 40px 48px 31px; }
+  h1 { font-size: clamp(70px, 5.8vw, 104px); max-width: 13ch; }
+  .wisdom-face blockquote { font-size: clamp(40px, 3.2vw, 58px); max-width: 25ch; }
+  .wisdom-face blockquote.wisdom-long { font-size: clamp(36px, 2.7vw, 49px); max-width: 29ch; }
+  .wisdom-note { font-size: 14px; }
+  .controls, .progress { width: clamp(900px, 74vw, 1320px); }
 }
+
+:fullscreen .app-shell { min-height: 100vh; }
 
 @media (max-height: 680px) {
   .app-shell { gap: 8px; padding-top: 10px; }

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { categories, Question, questions } from "./questions";
+import { questionWisdom } from "./wisdom";
 
 const palettes = [
   ["#d8ff4f", "#b9a6ff"], ["#ff765a", "#ffd5cc"], ["#f7a8cf", "#ffdd55"],
@@ -181,6 +182,7 @@ export default function Deck() {
   const [importText, setImportText] = useState("");
   const [importCategory, setImportCategory] = useState(0);
   const [notice, setNotice] = useState("");
+  const [isPresenting, setIsPresenting] = useState(false);
   const touchStart = useRef(0);
 
   const allQuestions = useMemo(() => [...questions, ...customQuestions], [customQuestions]);
@@ -202,6 +204,18 @@ export default function Deck() {
   const current = allQuestions[deck[position] ?? 0] ?? questions[0];
   const category = categories[current.category];
   const palette = palettes[current.category];
+  const currentWisdom = current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
+
+  useEffect(() => {
+    const onFullscreenChange = () => setIsPresenting(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  const togglePresentMode = async () => {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  };
 
   const move = (direction: "next" | "prev") => {
     if (moving) return;
@@ -283,7 +297,10 @@ export default function Deck() {
           <div className="wordmark" aria-label="Hmm"><span>HMM</span><i /></div>
           <span className="brand-note">QUESTIONS WORTH<br/>SITTING WITH</span>
         </div>
-        <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
+        <div className="header-actions">
+          <button className="present-button" type="button" onClick={togglePresentMode}><b>{isPresenting ? "×" : "⛶"}</b><span>{isPresenting ? "Exit" : "Present"}</span></button>
+          <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
+        </div>
       </header>
 
       <section className="stage" aria-label="Question card" onPointerDown={(e) => { touchStart.current = e.clientX; }} onPointerUp={(e) => { const distance = e.clientX - touchStart.current; if (Math.abs(distance) > 55) move(distance < 0 ? "next" : "prev"); }}>
@@ -303,8 +320,8 @@ export default function Deck() {
           ) : (
             <div className="wisdom-face">
               <p className="eyebrow">A LITTLE WISDOM</p>
-              <blockquote>“{current.wisdom || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]}”</blockquote>
-              <p className="wisdom-note">Not the answer. Just a thought to toss into the middle.</p>
+              <blockquote className={currentWisdom.length > 230 ? "wisdom-long" : ""}>{currentWisdom}</blockquote>
+              <p className="wisdom-note">A thought to help the conversation go one layer deeper.</p>
               <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← Back to the question</button>
             </div>
           )}
