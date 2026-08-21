@@ -1,4 +1,4 @@
-export type Question = { id: number; category: number; text: string };
+export type Question = { id: number; category: number; text: string; wisdom?: string; custom?: boolean };
 
 export const categories = [["Identity & Self-Perception","Identity"],["Vulnerability & Growth","Vulnerability"],["Relationships & Connection","Connection"],["Meaning & Purpose","Purpose"],["Time, Mortality & Perspective","Perspective"],["Emotional Intelligence & Reactions","Emotions"],["Worldview & Deep Beliefs","Worldview"],["Life Transitions & Reflections","Transitions"],["Self-Discovery & Future","Future"],["Connection, Gratitude & Group Reflection","Together"]] as const;
 
@@ -204,4 +204,3 @@ export const questions: Question[] = [
   { id: 199, category: 9, text: "What is one word you'd like to embody in this group?" },
   { id: 200, category: 9, text: "What is your hope for this group in the next year?" },
 ];
-

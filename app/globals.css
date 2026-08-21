@@ -90,13 +90,20 @@ h1 { margin: 0; max-width: 11ch; font-family: Georgia, Times New Roman, serif; f
 
 .sheet-wrap { position: fixed; inset: 0; z-index: 20; display: flex; align-items: end; justify-content: center; animation: fade-in .2s both; }
 .sheet-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #1716119c; cursor: default; }
-.sheet { position: relative; z-index: 1; width: min(520px, 100%); max-height: min(88svh, 780px); display: flex; flex-direction: column; background: var(--paper); border-radius: 28px 28px 0 0; padding: 11px 18px max(18px, env(safe-area-inset-bottom)); box-shadow: 0 -20px 80px #0003; animation: sheet-up .32s cubic-bezier(.2,.8,.2,1) both; }
+.sheet { position: relative; z-index: 1; width: min(560px, 100%); max-height: min(92svh, 820px); display: flex; flex-direction: column; background: var(--paper); border-radius: 28px 28px 0 0; padding: 11px 18px max(18px, env(safe-area-inset-bottom)); box-shadow: 0 -20px 80px #0003; animation: sheet-up .32s cubic-bezier(.2,.8,.2,1) both; }
 .sheet-handle { width: 42px; height: 4px; background: #1e1d1930; border-radius: 99px; margin: 0 auto 16px; }
 .sheet-head { display: flex; justify-content: space-between; align-items: start; margin-bottom: 13px; }
 .sheet-head p { margin: 0 0 4px; font-size: 8px; font-weight: 900; letter-spacing: .16em; }
 .sheet-head h2 { margin: 0; font: 400 32px/1 Georgia, serif; letter-spacing: -.045em; }
 .sheet-head > button { width: 39px; height: 39px; border: 1.5px solid var(--ink); border-radius: 50%; background: transparent; font-size: 22px; line-height: 1; cursor: pointer; }
-.category-list { overflow: auto; padding: 2px 0 12px; display: grid; gap: 7px; scrollbar-width: none; }
+.sheet-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 14px; padding: 4px; border: 1.5px solid #1e1d1925; border-radius: 99px; }
+.sheet-tabs button { min-height: 34px; border: 0; border-radius: 99px; background: transparent; font-size: 10px; font-weight: 800; cursor: pointer; }
+.sheet-tabs button.active { background: var(--ink); color: white; }
+.sheet-content { min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.tab-panel { min-height: 0; overflow: auto; display: flex; flex-direction: column; animation: face-in .22s ease both; scrollbar-width: none; }
+.tab-panel::-webkit-scrollbar { display: none; }
+.panel-intro { margin: 0 0 14px; max-width: 42ch; font: italic 16px/1.35 Georgia, serif; color: #1e1d19b5; }
+.category-list { overflow: visible; padding: 2px 2px 12px; display: grid; gap: 7px; scrollbar-width: none; }
 .category-list::-webkit-scrollbar { display: none; }
 .category-list button { min-height: 55px; display: grid; grid-template-columns: 27px 1fr 28px; align-items: center; gap: 11px; padding: 8px 11px; border: 1.5px solid #1e1d1930; border-radius: 13px; background: transparent; text-align: left; cursor: pointer; }
 .category-list button.selected { border-color: var(--ink); background: white; box-shadow: 2px 2px 0 var(--ink); }
@@ -108,16 +115,65 @@ h1 { margin: 0; max-width: 11ch; font-family: Georgia, Times New Roman, serif; f
 .category-list .selected em { background: var(--ink); color: white; }
 .apply-button { flex: none; min-height: 53px; border: 1.5px solid var(--ink); border-radius: 99px; background: var(--ink); color: white; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; font-weight: 800; cursor: pointer; }
 .apply-button span { font-size: 21px; }
+.studio-form { gap: 13px; padding: 1px 2px 3px; }
+.studio-form label { display: grid; gap: 6px; }
+.studio-form label > span { font-size: 9px; line-height: 1.2; font-weight: 900; letter-spacing: .12em; text-transform: uppercase; }
+.studio-form label > span em { font-weight: 500; font-style: normal; opacity: .5; }
+.studio-form textarea, .studio-form select { width: 100%; border: 1.5px solid #1e1d1960; border-radius: 13px; background: #fffdfa; padding: 12px 13px; outline: none; font: 15px/1.4 Georgia, serif; resize: vertical; }
+.studio-form textarea:focus, .studio-form select:focus { border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.studio-form select { min-height: 46px; appearance: auto; font-family: Arial, sans-serif; font-size: 12px; font-weight: 700; }
+.file-picker { min-height: 80px; place-items: center; align-content: center; border: 1.5px dashed #1e1d1980; border-radius: 14px; background: #fff9; cursor: pointer; text-align: center; }
+.file-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.file-picker b { font-size: 12px; }
+.file-picker small { font-size: 8px; letter-spacing: .1em; opacity: .55; }
+.field-help { margin-top: -1px; font-size: 9px; line-height: 1.4; opacity: .62; }
+.form-notice { margin: -2px 0 0; padding: 9px 11px; border-radius: 10px; background: #d8ff4f; font-size: 10px; font-weight: 800; }
+.import-actions { display: grid; gap: 8px; }
+.clear-button { min-height: 40px; border: 0; background: transparent; text-decoration: underline; font-size: 10px; opacity: .65; cursor: pointer; }
+.local-note { margin: -3px 0 0; text-align: center; font-size: 8px; letter-spacing: .06em; opacity: .5; }
 
 @keyframes face-in { from { opacity: 0; transform: translateY(7px); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes sheet-up { from { transform: translateY(30px); opacity: .7; } }
 
 @media (min-width: 700px) {
-  .app-shell { box-shadow: 0 0 90px #756f6570; padding-inline: 27px; }
-  .question-card { padding: 26px 27px 21px; }
+  .app-shell { max-width: 980px; box-shadow: 0 0 90px #756f6570; padding: 25px 42px 20px; gap: 19px; }
   .topbar { padding-top: 3px; }
-  .sheet { padding-inline: 24px; }
+  .wordmark { font-size: 29px; }
+  .wordmark i { width: 11px; height: 11px; }
+  .brand-note { font-size: 9px; }
+  .menu-button { width: 49px; height: 49px; }
+  .card-stack { width: min(690px, calc(100% - 96px)); height: min(69svh, 680px); }
+  .question-card { width: min(690px, calc(100% - 96px)); min-height: min(67svh, 658px); max-height: 700px; border-radius: 36px; padding: 32px 35px 26px; }
+  .card-stack i { border-radius: 36px; }
+  .card-meta, .card-foot { font-size: 10px; }
+  .eyebrow { margin-top: clamp(65px, 10svh, 105px); font-size: 11px; }
+  h1 { font-size: clamp(55px, 7.3vw, 76px); max-width: 12ch; }
+  .wisdom-face blockquote { font-size: clamp(50px, 6.7vw, 70px); max-width: 13ch; }
+  .wisdom, .wisdom-note { font-size: 13px; }
+  .controls, .progress { width: min(690px, calc(100% - 96px)); margin-inline: auto; }
+  .controls { grid-template-columns: 60px 1fr 60px; gap: 12px; }
+  .round-button, .next-button { height: 60px; }
+  .sheet-wrap { align-items: center; padding: 28px; }
+  .sheet { width: min(720px, 100%); max-height: min(88svh, 840px); border-radius: 30px; padding: 15px 28px 25px; }
+  .sheet-head h2 { font-size: 40px; }
+  .sheet-tabs { max-width: 430px; }
+  .category-list { grid-template-columns: 1fr 1fr; }
+  .category-list button { min-height: 60px; }
+  .studio-form { max-width: 620px; width: 100%; margin-inline: auto; }
+  .studio-form textarea { font-size: 17px; }
+  .import-actions { grid-template-columns: 1fr auto; align-items: center; }
+  .clear-button { padding-inline: 15px; }
+}
+
+@media (min-width: 1100px) {
+  .app-shell { max-width: 1180px; padding-inline: 64px; }
+  .card-stack, .question-card { width: min(780px, 70vw); }
+  .card-stack { height: min(72svh, 730px); }
+  .question-card { min-height: min(70svh, 708px); max-height: 750px; padding: 38px 43px 30px; }
+  h1 { font-size: clamp(66px, 5.7vw, 86px); }
+  .wisdom-face blockquote { font-size: clamp(58px, 5.2vw, 78px); }
+  .controls, .progress { width: min(780px, 70vw); }
 }
 
 @media (max-height: 680px) {

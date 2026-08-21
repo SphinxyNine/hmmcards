@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { categories, questions } from "./questions";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { categories, Question, questions } from "./questions";
 
 const palettes = [
   ["#d8ff4f", "#b9a6ff"], ["#ff765a", "#ffd5cc"], ["#f7a8cf", "#ffdd55"],
@@ -122,21 +122,84 @@ const shuffle = (items: number[]) => {
   return copy;
 };
 
+const STORAGE_KEY = "hmm-custom-questions-v1";
+
+const categoryIndex = (value: unknown, fallback: number) => {
+  if (typeof value === "number" && value >= 0 && value < categories.length) return value;
+  if (typeof value === "string") {
+    const exact = categories.findIndex((category) => category.some((name) => name.toLowerCase() === value.toLowerCase()));
+    if (exact >= 0) return exact;
+  }
+  return fallback;
+};
+
+const parseQuestionSet = (source: string, fallbackCategory: number): Question[] => {
+  const trimmed = source.trim();
+  if (!trimmed) return [];
+
+  const makeQuestion = (text: unknown, answer: unknown, category: unknown, index: number): Question | null => {
+    if (typeof text !== "string" || !text.trim()) return null;
+    return {
+      id: Date.now() + index,
+      text: text.trim().replace(/^\d+[.)]\s*/, ""),
+      wisdom: typeof answer === "string" && answer.trim() ? answer.trim() : undefined,
+      category: categoryIndex(category, fallbackCategory),
+      custom: true,
+    };
+  };
+
+  if (trimmed.startsWith("[")) {
+    const parsed = JSON.parse(trimmed) as unknown[];
+    return parsed.map((item, index) => {
+      if (typeof item === "string") return makeQuestion(item, "", fallbackCategory, index);
+      if (item && typeof item === "object") {
+        const row = item as Record<string, unknown>;
+        return makeQuestion(row.question ?? row.text, row.wisdom ?? row.answer, row.category, index);
+      }
+      return null;
+    }).filter((item): item is Question => Boolean(item));
+  }
+
+  return trimmed.split(/\r?\n/).map((line, index) => {
+    const [text, ...answer] = line.split("|");
+    return makeQuestion(text, answer.join("|"), fallbackCategory, index);
+  }).filter((item): item is Question => Boolean(item));
+};
+
 export default function Deck() {
   const [selected, setSelected] = useState<number[]>(categories.map((_, i) => i));
   const [deck, setDeck] = useState<number[]>(questions.map((_, i) => i));
+  const [customQuestions, setCustomQuestions] = useState<Question[]>([]);
   const [position, setPosition] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<"mix" | "add" | "import">("mix");
   const [moving, setMoving] = useState<"next" | "prev" | "">("");
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newWisdom, setNewWisdom] = useState("");
+  const [newCategory, setNewCategory] = useState(0);
+  const [importText, setImportText] = useState("");
+  const [importCategory, setImportCategory] = useState(0);
+  const [notice, setNotice] = useState("");
   const touchStart = useRef(0);
 
+  const allQuestions = useMemo(() => [...questions, ...customQuestions], [customQuestions]);
+
   useEffect(() => {
-    const key = window.setTimeout(() => setDeck(shuffle(questions.map((_, i) => i))), 0);
+    let stored: Question[] = [];
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) stored = parsed.filter((item) => item && typeof item.text === "string");
+    } catch { /* An unreadable local deck should never block the built-in cards. */ }
+    const key = window.setTimeout(() => {
+      setCustomQuestions(stored);
+      setDeck(shuffle([...questions, ...stored].map((_, i) => i)));
+    }, 0);
     return () => window.clearTimeout(key);
   }, []);
 
-  const current = questions[deck[position] ?? 0];
+  const current = allQuestions[deck[position] ?? 0] ?? questions[0];
   const category = categories[current.category];
   const palette = palettes[current.category];
 
@@ -151,11 +214,51 @@ export default function Deck() {
     }, 180);
   };
 
-  const reshuffle = (chosen = selected) => {
-    const pool = questions.map((q, i) => chosen.includes(q.category) ? i : -1).filter((i) => i >= 0);
+  const reshuffle = (chosen = selected, source = allQuestions) => {
+    const pool = source.map((q, i) => chosen.includes(q.category) ? i : -1).filter((i) => i >= 0);
     setDeck(shuffle(pool));
     setPosition(0);
     setRevealed(false);
+  };
+
+  const saveCustomQuestions = (next: Question[]) => {
+    setCustomQuestions(next);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    reshuffle(selected, [...questions, ...next]);
+  };
+
+  const addQuestion = (event: FormEvent) => {
+    event.preventDefault();
+    if (!newQuestion.trim()) return;
+    const card: Question = {
+      id: Date.now(),
+      text: newQuestion.trim(),
+      wisdom: newWisdom.trim() || undefined,
+      category: newCategory,
+      custom: true,
+    };
+    saveCustomQuestions([...customQuestions, card]);
+    setNewQuestion("");
+    setNewWisdom("");
+    setNotice("Card added — it is now in the shuffle.");
+  };
+
+  const importQuestions = (event: FormEvent) => {
+    event.preventDefault();
+    try {
+      const imported = parseQuestionSet(importText, importCategory);
+      if (!imported.length) throw new Error("No readable questions found.");
+      saveCustomQuestions([...customQuestions, ...imported]);
+      setImportText("");
+      setNotice(`${imported.length} card${imported.length === 1 ? "" : "s"} joined the deck.`);
+    } catch {
+      setNotice("That set needs a second look. Try one question per line, or valid JSON.");
+    }
+  };
+
+  const clearCustomQuestions = () => {
+    saveCustomQuestions([]);
+    setNotice("Custom cards cleared. The original 200 are still here.");
   };
 
   const toggleCategory = (id: number) => {
@@ -180,14 +283,14 @@ export default function Deck() {
           <div className="wordmark" aria-label="Hmm"><span>HMM</span><i /></div>
           <span className="brand-note">QUESTIONS WORTH<br/>SITTING WITH</span>
         </div>
-        <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => setSettingsOpen(true)}><span /><span /></button>
+        <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
       </header>
 
       <section className="stage" aria-label="Question card" onPointerDown={(e) => { touchStart.current = e.clientX; }} onPointerUp={(e) => { const distance = e.clientX - touchStart.current; if (Math.abs(distance) > 55) move(distance < 0 ? "next" : "prev"); }}>
         <div className="card-stack" aria-hidden="true"><i /><i /></div>
         <article className={`question-card ${moving ? `card-${moving}` : ""}`} aria-live="polite">
           <div className="card-meta">
-            <span>{String(current.category + 1).padStart(2, "0")} · {category[1]}</span>
+            <span>{current.custom ? "Custom" : String(current.category + 1).padStart(2, "0")} · {category[1]}</span>
             <span>{position + 1} / {deck.length}</span>
           </div>
 
@@ -200,7 +303,7 @@ export default function Deck() {
           ) : (
             <div className="wisdom-face">
               <p className="eyebrow">A LITTLE WISDOM</p>
-              <blockquote>“{wisdom[current.category][(current.id - 1) % wisdom[current.category].length]}”</blockquote>
+              <blockquote>“{current.wisdom || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]}”</blockquote>
               <p className="wisdom-note">Not the answer. Just a thought to toss into the middle.</p>
               <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← Back to the question</button>
             </div>
@@ -223,11 +326,77 @@ export default function Deck() {
           <button className="sheet-backdrop" aria-label="Close settings" onClick={() => setSettingsOpen(false)} />
           <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
             <div className="sheet-handle" />
-            <div className="sheet-head"><div><p>BUILD YOUR DECK</p><h2 id="sheet-title">Pick a mood.</h2></div><button onClick={() => setSettingsOpen(false)} aria-label="Close settings">×</button></div>
-            <div className="category-list">
-              {categories.map((cat, index) => <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{cat[0]}</b><small>20 questions</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>)}
+            <div className="sheet-head">
+              <div><p>QUESTION STUDIO</p><h2 id="sheet-title">Make it yours.</h2></div>
+              <button onClick={() => setSettingsOpen(false)} aria-label="Close settings">×</button>
             </div>
-            <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>Shuffle {selected.length * 20} cards <span>→</span></button>
+
+            <div className="sheet-tabs" role="tablist" aria-label="Question settings">
+              <button role="tab" aria-selected={settingsTab === "mix"} className={settingsTab === "mix" ? "active" : ""} onClick={() => { setSettingsTab("mix"); setNotice(""); }}>Mix deck</button>
+              <button role="tab" aria-selected={settingsTab === "add"} className={settingsTab === "add" ? "active" : ""} onClick={() => { setSettingsTab("add"); setNotice(""); }}>Add one</button>
+              <button role="tab" aria-selected={settingsTab === "import"} className={settingsTab === "import" ? "active" : ""} onClick={() => { setSettingsTab("import"); setNotice(""); }}>Import set</button>
+            </div>
+
+            <div className="sheet-content">
+              {settingsTab === "mix" && (
+                <div className="tab-panel" role="tabpanel">
+                  <p className="panel-intro">Choose what kind of conversation you feel like having.</p>
+                  <div className="category-list">
+                    {categories.map((cat, index) => {
+                      const count = 20 + customQuestions.filter((item) => item.category === index).length;
+                      return <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{cat[0]}</b><small>{count} questions</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>;
+                    })}
+                  </div>
+                  <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>Shuffle {allQuestions.filter((item) => selected.includes(item.category)).length} cards <span>→</span></button>
+                </div>
+              )}
+
+              {settingsTab === "add" && (
+                <form className="studio-form tab-panel" role="tabpanel" onSubmit={addQuestion}>
+                  <p className="panel-intro">Write the card you wish somebody would pull tonight.</p>
+                  <label>
+                    <span>Question</span>
+                    <textarea required value={newQuestion} onChange={(event) => setNewQuestion(event.target.value)} placeholder="What have you been pretending not to know?" rows={3} />
+                  </label>
+                  <label>
+                    <span>Little wisdom <em>optional</em></span>
+                    <textarea value={newWisdom} onChange={(event) => setNewWisdom(event.target.value)} placeholder="Clarity has a habit of waiting behind honesty." rows={3} />
+                  </label>
+                  <label>
+                    <span>Category</span>
+                    <select value={newCategory} onChange={(event) => setNewCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{cat[0]}</option>)}</select>
+                  </label>
+                  {notice && <p className="form-notice" role="status">✦ {notice}</p>}
+                  <button className="apply-button" type="submit">Add to the shuffle <span>＋</span></button>
+                </form>
+              )}
+
+              {settingsTab === "import" && (
+                <form className="studio-form tab-panel" role="tabpanel" onSubmit={importQuestions}>
+                  <p className="panel-intro">Paste a list or choose a text/JSON file. One line becomes one card.</p>
+                  <label className="file-picker">
+                    <input type="file" accept=".txt,.csv,.json,text/plain,application/json" onChange={async (event) => { const file = event.target.files?.[0]; if (file) { setImportText(await file.text()); setNotice(`${file.name} is ready to import.`); } }} />
+                    <b>↑ Choose a question file</b>
+                    <small>TXT, CSV, or JSON</small>
+                  </label>
+                  <label>
+                    <span>Question set</span>
+                    <textarea required value={importText} onChange={(event) => setImportText(event.target.value)} placeholder={"What makes you feel at home? | Home is often a person before it is a place.\nWhat are you ready to begin?"} rows={6} />
+                    <small className="field-help">Use <b>Question | Wisdom</b> per line. JSON can use question, wisdom, and category fields.</small>
+                  </label>
+                  <label>
+                    <span>Default category</span>
+                    <select value={importCategory} onChange={(event) => setImportCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{cat[0]}</option>)}</select>
+                  </label>
+                  {notice && <p className="form-notice" role="status">✦ {notice}</p>}
+                  <div className="import-actions">
+                    <button className="apply-button" type="submit">Import this set <span>→</span></button>
+                    {customQuestions.length > 0 && <button className="clear-button" type="button" onClick={clearCustomQuestions}>Clear {customQuestions.length} custom card{customQuestions.length === 1 ? "" : "s"}</button>}
+                  </div>
+                  <p className="local-note">Saved privately in this browser. Nothing is uploaded.</p>
+                </form>
+              )}
+            </div>
           </section>
         </div>
       )}
