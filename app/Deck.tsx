@@ -130,8 +130,18 @@ type Language = "en" | "tl";
 const categoryLabelsTl = ["Sarili", "Paglago", "Ugnayan", "Layunin", "Pananaw", "Damdamin", "Paniniwala", "Pagbabago", "Hinaharap", "Barkada"];
 const categoryNamesTl = ["Pagkilala sa Sarili", "Tapang at Paglago", "Ugnayan at Pagmamahal", "Kahulugan at Layunin", "Oras at Pananaw", "Damdamin at Tugon", "Pananaw sa Buhay", "Pagbabago sa Buhay", "Sarili at Hinaharap", "Barkada at Pasasalamat"];
 const cardCopy = {
-  en: { ask: "ASK THIS", reveal: "Reveal a little wisdom", wisdom: "A LITTLE WISDOM", note: "A thought to help the conversation go one layer deeper.", back: "Back to the question", slow: "NO RUSH.", pass: "PASS IT AROUND", next: "Next card", mix: "mix" },
-  tl: { ask: "PAG-USAPAN ITO", reveal: "Tingnan ang munting gabay", wisdom: "MUNTING GABAY", note: "Isang kaisipang makatutulong para mas lumalim at luminaw ang usapan.", back: "Bumalik sa tanong", slow: "DAHAN-DAHAN LANG.", pass: "IPASA SA KATABI", next: "Susunod na card", mix: "halo" },
+  en: {
+    ask: "ASK THIS", reveal: "Reveal a little wisdom", wisdom: "A LITTLE WISDOM", note: "A thought to help the conversation go one layer deeper.", back: "Back to the question", slow: "NO RUSH.", pass: "PASS IT AROUND", next: "Next card", mix: "mix",
+    fullScreen: "Full screen", exitFullScreen: "Exit full screen", settings: "Open card settings", previous: "Previous question", studioHeading: "Make it yours.", mixDeck: "Mix deck", addOne: "Add one", importSet: "Import set", mixIntro: "Choose what kind of conversation you feel like having.", questionUnit: "questions", shuffle: "Shuffle",
+    addIntro: "Write the card you wish somebody would pull tonight.", questionLabel: "Question", questionPlaceholder: "What have you been pretending not to know?", wisdomLabel: "Little wisdom", optional: "optional", wisdomPlaceholder: "Clarity has a habit of waiting behind honesty.", category: "Category", addButton: "Add to the shuffle",
+    importIntro: "Paste a list or choose a text/JSON file. One line becomes one card.", chooseFile: "Choose a question file", questionSet: "Question set", fieldHelp: "Use Question | Wisdom per line. JSON can use question, wisdom, and category fields.", defaultCategory: "Default category", importButton: "Import this set", clear: "Clear", customCard: "custom card", customCards: "custom cards", privateNote: "Saved privately in this browser. Nothing is uploaded.",
+  },
+  tl: {
+    ask: "PAG-USAPAN NATIN", reveal: "Reveal ang little wisdom", wisdom: "LITTLE WISDOM", note: "Isang thought para mas malinaw at mas deep ang usapan.", back: "Back sa question", slow: "WALANG RUSH.", pass: "IPASA SA NEXT", next: "Next card", mix: "mix",
+    fullScreen: "Full screen", exitFullScreen: "Exit full screen", settings: "Open card settings", previous: "Previous question", studioHeading: "Gawin mong sa’yo.", mixDeck: "Mix cards", addOne: "Add question", importSet: "Import set", mixIntro: "Piliin ang vibe ng conversation na gusto n’yo.", questionUnit: "questions", shuffle: "Mix",
+    addIntro: "Isulat ang question na gusto mong mapili ng barkada tonight.", questionLabel: "Question", questionPlaceholder: "Ano ang matagal mo nang alam pero ayaw mo pang aminin?", wisdomLabel: "Little wisdom", optional: "optional", wisdomPlaceholder: "Madalas, nasa likod ng honesty ang clarity.", category: "Category", addButton: "Add sa deck",
+    importIntro: "Mag-paste ng list or pumili ng text/JSON file. One line, one card.", chooseFile: "Pumili ng question file", questionSet: "Question set", fieldHelp: "Use Question | Wisdom per line. Puwede ring JSON with question, wisdom, and category.", defaultCategory: "Default category", importButton: "Import this set", clear: "Clear", customCard: "custom card", customCards: "custom cards", privateNote: "Private lang sa browser na ito. Walang ina-upload.",
+  },
 } as const;
 
 const isAvailableInLanguage = (question: Question, language: Language) => language === "en" || Boolean(question.textTl) || Boolean(question.custom);
@@ -280,7 +290,7 @@ export default function Deck() {
     saveCustomQuestions([...customQuestions, card]);
     setNewQuestion("");
     setNewWisdom("");
-    setNotice("Card added — it is now in the shuffle.");
+    setNotice(language === "tl" ? "Added na ang card—kasama na siya sa mix." : "Card added — it is now in the shuffle.");
   };
 
   const importQuestions = (event: FormEvent) => {
@@ -290,15 +300,15 @@ export default function Deck() {
       if (!imported.length) throw new Error("No readable questions found.");
       saveCustomQuestions([...customQuestions, ...imported]);
       setImportText("");
-      setNotice(`${imported.length} card${imported.length === 1 ? "" : "s"} joined the deck.`);
+      setNotice(language === "tl" ? `${imported.length} card${imported.length === 1 ? "" : "s"} added sa deck.` : `${imported.length} card${imported.length === 1 ? "" : "s"} joined the deck.`);
     } catch {
-      setNotice("That set needs a second look. Try one question per line, or valid JSON.");
+      setNotice(language === "tl" ? "Check ulit ang set. Try one question per line or valid JSON." : "That set needs a second look. Try one question per line, or valid JSON.");
     }
   };
 
   const clearCustomQuestions = () => {
     saveCustomQuestions([]);
-    setNotice("Custom cards cleared. The built-in cards are still here.");
+    setNotice(language === "tl" ? "Cleared na ang custom cards. Nandito pa rin ang built-in cards." : "Custom cards cleared. The built-in cards are still here.");
   };
 
   const toggleCategory = (id: number) => {
@@ -328,8 +338,8 @@ export default function Deck() {
             <button className={language === "en" ? "active" : ""} type="button" aria-pressed={language === "en"} onClick={() => changeLanguage("en")}>EN</button>
             <button className={language === "tl" ? "active" : ""} type="button" aria-pressed={language === "tl"} onClick={() => changeLanguage("tl")}>TL</button>
           </div>
-          <button className="present-button" type="button" onClick={togglePresentMode}><b>{isPresenting ? "×" : "⛶"}</b><span>{isPresenting ? (language === "tl" ? "Lumabas" : "Exit") : (language === "tl" ? "I-presenta" : "Present")}</span></button>
-          <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
+          <button className="present-button" type="button" onClick={togglePresentMode}><b>{isPresenting ? "×" : "⛶"}</b><span>{isPresenting ? copy.exitFullScreen : copy.fullScreen}</span></button>
+          <button className="menu-button" type="button" aria-label={copy.settings} onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
         </div>
       </header>
 
@@ -337,7 +347,7 @@ export default function Deck() {
         <div className="card-stack" aria-hidden="true"><i /><i /></div>
         <article className={`question-card ${moving ? `card-${moving}` : ""}`} aria-live="polite">
           <div className="card-meta">
-            <span>{current.custom ? (language === "tl" ? "Sariling card" : "Custom") : String(current.category + 1).padStart(2, "0")} · {categoryLabel}</span>
+            <span>{current.custom ? "Custom" : String(current.category + 1).padStart(2, "0")} · {categoryLabel}</span>
             <span>{position + 1} / {deck.length}</span>
           </div>
 
@@ -361,7 +371,7 @@ export default function Deck() {
       </section>
 
       <nav className="controls" aria-label="Deck controls">
-        <button className="round-button" type="button" aria-label="Previous question" onClick={() => move("prev")} disabled={position === 0}>←</button>
+        <button className="round-button" type="button" aria-label={copy.previous} onClick={() => move("prev")} disabled={position === 0}>←</button>
         <button className="next-button" type="button" onClick={() => move("next")}><span>{copy.next}</span><b>→</b></button>
         <button className="round-button shuffle-button" type="button" aria-label={language === "tl" ? "Haluin ang mga card" : "Shuffle deck"} onClick={() => reshuffle()}>↻<small>{copy.mix}</small></button>
       </nav>
@@ -374,74 +384,74 @@ export default function Deck() {
           <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
             <div className="sheet-handle" />
             <div className="sheet-head">
-              <div><p>QUESTION STUDIO</p><h2 id="sheet-title">Make it yours.</h2></div>
+              <div><p>QUESTION STUDIO</p><h2 id="sheet-title">{copy.studioHeading}</h2></div>
               <button onClick={() => setSettingsOpen(false)} aria-label="Close settings">×</button>
             </div>
 
             <div className="sheet-tabs" role="tablist" aria-label="Question settings">
-              <button role="tab" aria-selected={settingsTab === "mix"} className={settingsTab === "mix" ? "active" : ""} onClick={() => { setSettingsTab("mix"); setNotice(""); }}>Mix deck</button>
-              <button role="tab" aria-selected={settingsTab === "add"} className={settingsTab === "add" ? "active" : ""} onClick={() => { setSettingsTab("add"); setNotice(""); }}>Add one</button>
-              <button role="tab" aria-selected={settingsTab === "import"} className={settingsTab === "import" ? "active" : ""} onClick={() => { setSettingsTab("import"); setNotice(""); }}>Import set</button>
+              <button role="tab" aria-selected={settingsTab === "mix"} className={settingsTab === "mix" ? "active" : ""} onClick={() => { setSettingsTab("mix"); setNotice(""); }}>{copy.mixDeck}</button>
+              <button role="tab" aria-selected={settingsTab === "add"} className={settingsTab === "add" ? "active" : ""} onClick={() => { setSettingsTab("add"); setNotice(""); }}>{copy.addOne}</button>
+              <button role="tab" aria-selected={settingsTab === "import"} className={settingsTab === "import" ? "active" : ""} onClick={() => { setSettingsTab("import"); setNotice(""); }}>{copy.importSet}</button>
             </div>
 
             <div className="sheet-content">
               {settingsTab === "mix" && (
                 <div className="tab-panel" role="tabpanel">
-                  <p className="panel-intro">{language === "tl" ? "Piliin kung anong klaseng kuwentuhan ang gusto ninyo." : "Choose what kind of conversation you feel like having."}</p>
+                  <p className="panel-intro">{copy.mixIntro}</p>
                   <div className="category-list">
                     {categories.map((cat, index) => {
                       const count = allQuestions.filter((item) => item.category === index && isAvailableInLanguage(item, language)).length;
                       const name = language === "tl" ? categoryNamesTl[index] : cat[0];
-                      return <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{name}</b><small>{count} {language === "tl" ? "tanong" : "questions"}</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>;
+                      return <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{name}</b><small>{count} {copy.questionUnit}</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>;
                     })}
                   </div>
-                  <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>{language === "tl" ? "Ihalo" : "Shuffle"} {allQuestions.filter((item) => selected.includes(item.category) && isAvailableInLanguage(item, language)).length} cards <span>→</span></button>
+                  <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>{copy.shuffle} {allQuestions.filter((item) => selected.includes(item.category) && isAvailableInLanguage(item, language)).length} cards <span>→</span></button>
                 </div>
               )}
 
               {settingsTab === "add" && (
                 <form className="studio-form tab-panel" role="tabpanel" onSubmit={addQuestion}>
-                  <p className="panel-intro">Write the card you wish somebody would pull tonight.</p>
+                  <p className="panel-intro">{copy.addIntro}</p>
                   <label>
-                    <span>Question</span>
-                    <textarea required value={newQuestion} onChange={(event) => setNewQuestion(event.target.value)} placeholder="What have you been pretending not to know?" rows={3} />
+                    <span>{copy.questionLabel}</span>
+                    <textarea required value={newQuestion} onChange={(event) => setNewQuestion(event.target.value)} placeholder={copy.questionPlaceholder} rows={3} />
                   </label>
                   <label>
-                    <span>Little wisdom <em>optional</em></span>
-                    <textarea value={newWisdom} onChange={(event) => setNewWisdom(event.target.value)} placeholder="Clarity has a habit of waiting behind honesty." rows={3} />
+                    <span>{copy.wisdomLabel} <em>{copy.optional}</em></span>
+                    <textarea value={newWisdom} onChange={(event) => setNewWisdom(event.target.value)} placeholder={copy.wisdomPlaceholder} rows={3} />
                   </label>
                   <label>
-                    <span>Category</span>
-                    <select value={newCategory} onChange={(event) => setNewCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{cat[0]}</option>)}</select>
+                    <span>{copy.category}</span>
+                    <select value={newCategory} onChange={(event) => setNewCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{language === "tl" ? categoryNamesTl[index] : cat[0]}</option>)}</select>
                   </label>
                   {notice && <p className="form-notice" role="status">✦ {notice}</p>}
-                  <button className="apply-button" type="submit">Add to the shuffle <span>＋</span></button>
+                  <button className="apply-button" type="submit">{copy.addButton} <span>＋</span></button>
                 </form>
               )}
 
               {settingsTab === "import" && (
                 <form className="studio-form tab-panel" role="tabpanel" onSubmit={importQuestions}>
-                  <p className="panel-intro">Paste a list or choose a text/JSON file. One line becomes one card.</p>
+                  <p className="panel-intro">{copy.importIntro}</p>
                   <label className="file-picker">
                     <input type="file" accept=".txt,.csv,.json,text/plain,application/json" onChange={async (event) => { const file = event.target.files?.[0]; if (file) { setImportText(await file.text()); setNotice(`${file.name} is ready to import.`); } }} />
-                    <b>↑ Choose a question file</b>
+                    <b>↑ {copy.chooseFile}</b>
                     <small>TXT, CSV, or JSON</small>
                   </label>
                   <label>
-                    <span>Question set</span>
+                    <span>{copy.questionSet}</span>
                     <textarea required value={importText} onChange={(event) => setImportText(event.target.value)} placeholder={"What makes you feel at home? | Home is often a person before it is a place.\nWhat are you ready to begin?"} rows={6} />
-                    <small className="field-help">Use <b>Question | Wisdom</b> per line. JSON can use question, wisdom, and category fields.</small>
+                    <small className="field-help">{copy.fieldHelp}</small>
                   </label>
                   <label>
-                    <span>Default category</span>
-                    <select value={importCategory} onChange={(event) => setImportCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{cat[0]}</option>)}</select>
+                    <span>{copy.defaultCategory}</span>
+                    <select value={importCategory} onChange={(event) => setImportCategory(Number(event.target.value))}>{categories.map((cat, index) => <option key={cat[0]} value={index}>{language === "tl" ? categoryNamesTl[index] : cat[0]}</option>)}</select>
                   </label>
                   {notice && <p className="form-notice" role="status">✦ {notice}</p>}
                   <div className="import-actions">
-                    <button className="apply-button" type="submit">Import this set <span>→</span></button>
-                    {customQuestions.length > 0 && <button className="clear-button" type="button" onClick={clearCustomQuestions}>Clear {customQuestions.length} custom card{customQuestions.length === 1 ? "" : "s"}</button>}
+                    <button className="apply-button" type="submit">{copy.importButton} <span>→</span></button>
+                    {customQuestions.length > 0 && <button className="clear-button" type="button" onClick={clearCustomQuestions}>{copy.clear} {customQuestions.length} {customQuestions.length === 1 ? copy.customCard : copy.customCards}</button>}
                   </div>
-                  <p className="local-note">Saved privately in this browser. Nothing is uploaded.</p>
+                  <p className="local-note">{copy.privateNote}</p>
                 </form>
               )}
             </div>
