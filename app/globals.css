@@ -78,12 +78,17 @@ button:focus-visible { outline: 3px solid #2f62ff; outline-offset: 3px; }
 .card-meta, .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 9px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .question-face, .wisdom-face { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; animation: face-in .28s ease both; }
 .eyebrow { margin: clamp(52px, 11svh, 100px) 0 13px; font-size: 10px; font-weight: 900; letter-spacing: .18em; }
-h1 { margin: 0; max-width: 11ch; overflow-wrap: break-word; font-family: Georgia, Times New Roman, serif; font-size: clamp(36px, 10.8vw, 60px); font-weight: 400; line-height: .98; letter-spacing: -.055em; }
-h1.question-long { max-width: 13ch; font-size: clamp(31px, 9.1vw, 50px); line-height: 1.01; }
+h1 { margin: 0; max-width: 11ch; max-height: min(43svh, 390px); overflow: auto; overflow-wrap: anywhere; hyphens: auto; scrollbar-width: none; font-family: Georgia, Times New Roman, serif; font-size: clamp(36px, 10.8vw, 60px); font-weight: 400; line-height: .98; letter-spacing: -.055em; }
+h1::-webkit-scrollbar, .wisdom-face blockquote::-webkit-scrollbar { display: none; }
+h1.question-medium { max-width: 12ch; font-size: clamp(33px, 9.8vw, 54px); line-height: 1; }
+h1.question-long { max-width: 14ch; font-size: clamp(29px, 8.2vw, 45px); line-height: 1.02; }
+h1.question-xlong { max-width: 16ch; font-size: clamp(24px, 6.9vw, 38px); line-height: 1.06; }
 .wisdom { align-self: flex-start; margin: auto 0 28px; max-width: 100%; border: 0; border-bottom: 1px solid currentColor; background: transparent; padding: 0 0 5px; font-size: 12px; font-weight: 800; cursor: pointer; }
 .wisdom span { padding-right: 4px; }
-.wisdom-face blockquote { margin: 0; max-width: 24ch; font-family: Georgia, Times New Roman, serif; font-size: clamp(27px, 7.7vw, 42px); font-style: normal; line-height: 1.08; letter-spacing: -.04em; }
-.wisdom-face blockquote.wisdom-long { font-size: clamp(24px, 6.8vw, 36px); line-height: 1.12; }
+.wisdom-face blockquote { margin: 0; max-width: 24ch; max-height: min(43svh, 410px); overflow: auto; overflow-wrap: anywhere; hyphens: auto; scrollbar-width: none; font-family: Georgia, Times New Roman, serif; font-size: clamp(27px, 7.7vw, 42px); font-style: normal; line-height: 1.08; letter-spacing: -.04em; }
+.wisdom-face blockquote.wisdom-medium { max-width: 27ch; font-size: clamp(23px, 6.5vw, 35px); line-height: 1.12; }
+.wisdom-face blockquote.wisdom-long { max-width: 30ch; font-size: clamp(20px, 5.6vw, 30px); line-height: 1.16; }
+.wisdom-face blockquote.wisdom-xlong { max-width: 34ch; font-size: clamp(17px, 4.8vw, 26px); line-height: 1.2; }
 .wisdom-face .eyebrow { margin-top: clamp(44px, 8svh, 76px); }
 .wisdom-note { max-width: 42ch; margin: 18px 0 0; font-size: 11px; line-height: 1.45; font-weight: 700; opacity: .65; }
 
@@ -162,9 +167,13 @@ h1.question-long { max-width: 13ch; font-size: clamp(31px, 9.1vw, 50px); line-he
   .card-meta, .card-foot { font-size: 10px; }
   .eyebrow { margin-top: clamp(65px, 10svh, 105px); font-size: 11px; }
   h1 { font-size: clamp(55px, 7.3vw, 76px); max-width: 12ch; }
-  h1.question-long { font-size: clamp(48px, 6vw, 65px); max-width: 16ch; }
+  h1.question-medium { font-size: clamp(48px, 6.4vw, 68px); max-width: 14ch; }
+  h1.question-long { font-size: clamp(40px, 5.4vw, 58px); max-width: 17ch; }
+  h1.question-xlong { font-size: clamp(34px, 4.6vw, 50px); max-width: 20ch; }
   .wisdom-face blockquote { font-size: clamp(34px, 4.2vw, 50px); max-width: 24ch; }
-  .wisdom-face blockquote.wisdom-long { font-size: clamp(30px, 3.6vw, 43px); max-width: 28ch; }
+  .wisdom-face blockquote.wisdom-medium { font-size: clamp(30px, 3.6vw, 43px); max-width: 28ch; }
+  .wisdom-face blockquote.wisdom-long { font-size: clamp(25px, 3vw, 36px); max-width: 32ch; }
+  .wisdom-face blockquote.wisdom-xlong { font-size: clamp(21px, 2.5vw, 31px); max-width: 36ch; }
   .wisdom, .wisdom-note { font-size: 13px; }
   .controls, .progress { width: min(820px, calc(100% - 96px)); margin-inline: auto; }
   .controls { grid-template-columns: 60px 1fr 60px; gap: 12px; }
@@ -188,9 +197,13 @@ h1.question-long { max-width: 13ch; font-size: clamp(31px, 9.1vw, 50px); line-he
   .card-stack { height: clamp(540px, calc(100svh - 190px), 800px); }
   .question-card { height: clamp(520px, calc(100svh - 210px), 780px); padding: 40px 48px 31px; }
   h1 { font-size: clamp(70px, 5.8vw, 104px); max-width: 13ch; }
-  h1.question-long { font-size: clamp(58px, 4.5vw, 82px); max-width: 17ch; }
+  h1.question-medium { font-size: clamp(62px, 5vw, 90px); max-width: 15ch; }
+  h1.question-long { font-size: clamp(52px, 4.1vw, 74px); max-width: 18ch; }
+  h1.question-xlong { font-size: clamp(44px, 3.4vw, 62px); max-width: 21ch; }
   .wisdom-face blockquote { font-size: clamp(40px, 3.2vw, 58px); max-width: 25ch; }
-  .wisdom-face blockquote.wisdom-long { font-size: clamp(36px, 2.7vw, 49px); max-width: 29ch; }
+  .wisdom-face blockquote.wisdom-medium { font-size: clamp(35px, 2.7vw, 49px); max-width: 29ch; }
+  .wisdom-face blockquote.wisdom-long { font-size: clamp(29px, 2.2vw, 41px); max-width: 33ch; }
+  .wisdom-face blockquote.wisdom-xlong { font-size: clamp(24px, 1.8vw, 34px); max-width: 38ch; }
   .wisdom-note { font-size: 14px; }
   .controls, .progress { width: clamp(900px, 74vw, 1320px); }
 }
@@ -207,8 +220,13 @@ h1.question-long { max-width: 13ch; font-size: clamp(31px, 9.1vw, 50px); line-he
   .card-stack { height: min(67svh, 515px); }
   .eyebrow { margin-top: 36px; }
   h1 { font-size: clamp(32px, 9.5vw, 47px); }
-  h1.question-long { font-size: clamp(27px, 8vw, 39px); }
+  h1.question-medium { font-size: clamp(29px, 8.5vw, 41px); }
+  h1.question-long { font-size: clamp(25px, 7.2vw, 35px); }
+  h1.question-xlong { font-size: clamp(21px, 6.2vw, 30px); }
   .wisdom-face blockquote { font-size: clamp(30px, 8.5vw, 45px); }
+  .wisdom-face blockquote.wisdom-medium { font-size: clamp(25px, 7vw, 36px); }
+  .wisdom-face blockquote.wisdom-long { font-size: clamp(21px, 5.9vw, 30px); }
+  .wisdom-face blockquote.wisdom-xlong { font-size: clamp(18px, 5vw, 25px); }
   .wisdom { margin-bottom: 18px; }
   .card-foot, .card-meta { font-size: 8px; }
 }

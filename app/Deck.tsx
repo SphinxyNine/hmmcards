@@ -232,6 +232,8 @@ export default function Deck() {
   const currentWisdom = language === "tl"
     ? current.wisdomTl || current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]
     : current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
+  const questionSize = currentText.length > 150 ? "question-xlong" : currentText.length > 95 ? "question-long" : currentText.length > 65 ? "question-medium" : "";
+  const wisdomSize = currentWisdom.length > 380 ? "wisdom-xlong" : currentWisdom.length > 260 ? "wisdom-long" : currentWisdom.length > 180 ? "wisdom-medium" : "";
   const copy = cardCopy[language];
   const categoryLabel = language === "tl" ? categoryLabelsTl[current.category] : category[1];
 
@@ -354,13 +356,13 @@ export default function Deck() {
           {!revealed ? (
             <div className="question-face">
               <p className="eyebrow">{copy.ask}</p>
-              <h1 className={currentText.length > 95 ? "question-long" : ""}>{currentText}</h1>
+              <h1 className={questionSize} lang={language === "tl" ? "fil" : "en"}>{currentText}</h1>
               <button className="wisdom" type="button" onClick={() => setRevealed(true)}><span>✦</span> {copy.reveal}</button>
             </div>
           ) : (
             <div className="wisdom-face">
               <p className="eyebrow">{copy.wisdom}</p>
-              <blockquote className={currentWisdom.length > 230 ? "wisdom-long" : ""}>{currentWisdom}</blockquote>
+              <blockquote className={wisdomSize} lang={language === "tl" ? "fil" : "en"}>{currentWisdom}</blockquote>
               <p className="wisdom-note">{copy.note}</p>
               <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← {copy.back}</button>
             </div>
