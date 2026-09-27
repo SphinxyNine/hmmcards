@@ -249,10 +249,13 @@ export default function Deck() {
     const fitText = () => {
       element.style.removeProperty("font-size");
       element.scrollTop = 0;
-      let size = Number.parseFloat(window.getComputedStyle(element).fontSize);
+      const styles = window.getComputedStyle(element);
+      let size = Number.parseFloat(styles.fontSize);
+      const measuredMaximum = Number.parseFloat(styles.maxHeight);
+      const maximumHeight = Number.isFinite(measuredMaximum) ? measuredMaximum : Number.POSITIVE_INFINITY;
       const minimum = revealed ? 14 : 16;
 
-      while (size > minimum && (element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1)) {
+      while (size > minimum && element.scrollHeight > maximumHeight + 1) {
         size = Math.max(minimum, size - 1);
         element.style.fontSize = `${size}px`;
       }
