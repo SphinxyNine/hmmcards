@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { categories, Question, questions } from "./questions";
 import { questionWisdom } from "./wisdom";
 
@@ -206,6 +206,9 @@ export default function Deck() {
   const [isPresenting, setIsPresenting] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
   const touchStart = useRef(0);
+  const cardRef = useRef<HTMLElement>(null);
+  const questionTextRef = useRef<HTMLHeadingElement>(null);
+  const wisdomTextRef = useRef<HTMLQuoteElement>(null);
 
   const allQuestions = useMemo(() => [...questions, ...customQuestions], [customQuestions]);
 
@@ -236,6 +239,40 @@ export default function Deck() {
   const wisdomSize = currentWisdom.length > 380 ? "wisdom-xlong" : currentWisdom.length > 260 ? "wisdom-long" : currentWisdom.length > 180 ? "wisdom-medium" : "";
   const copy = cardCopy[language];
   const categoryLabel = language === "tl" ? categoryLabelsTl[current.category] : category[1];
+
+  useLayoutEffect(() => {
+    const element = revealed ? wisdomTextRef.current : questionTextRef.current;
+    const card = cardRef.current;
+    if (!element || !card) return;
+
+    let frame = 0;
+    const fitText = () => {
+      element.style.removeProperty("font-size");
+      element.scrollTop = 0;
+      let size = Number.parseFloat(window.getComputedStyle(element).fontSize);
+      const minimum = revealed ? 14 : 16;
+
+      while (size > minimum && (element.scrollHeight > element.clientHeight + 1 || element.scrollWidth > element.clientWidth + 1)) {
+        size = Math.max(minimum, size - 1);
+        element.style.fontSize = `${size}px`;
+      }
+      element.scrollTop = 0;
+    };
+    const queueFit = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(fitText);
+    };
+
+    fitText();
+    const observer = new ResizeObserver(queueFit);
+    observer.observe(card);
+    window.addEventListener("resize", queueFit);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener("resize", queueFit);
+    };
+  }, [currentText, currentWisdom, revealed, language, isPresenting]);
 
   useEffect(() => {
     const onFullscreenChange = () => setIsPresenting(Boolean(document.fullscreenElement));
@@ -347,7 +384,7 @@ export default function Deck() {
 
       <section className="stage" aria-label="Question card" onPointerDown={(e) => { touchStart.current = e.clientX; }} onPointerUp={(e) => { const distance = e.clientX - touchStart.current; if (Math.abs(distance) > 55) move(distance < 0 ? "next" : "prev"); }}>
         <div className="card-stack" aria-hidden="true"><i /><i /></div>
-        <article className={`question-card ${moving ? `card-${moving}` : ""}`} aria-live="polite">
+        <article ref={cardRef} className={`question-card ${moving ? `card-${moving}` : ""}`} aria-live="polite">
           <div className="card-meta">
             <span>{current.custom ? "Custom" : String(current.category + 1).padStart(2, "0")} · {categoryLabel}</span>
             <span>{position + 1} / {deck.length}</span>
@@ -356,13 +393,13 @@ export default function Deck() {
           {!revealed ? (
             <div className="question-face">
               <p className="eyebrow">{copy.ask}</p>
-              <h1 className={questionSize} lang={language === "tl" ? "fil" : "en"}>{currentText}</h1>
+              <h1 ref={questionTextRef} className={questionSize} lang={language === "tl" ? "fil" : "en"}>{currentText}</h1>
               <button className="wisdom" type="button" onClick={() => setRevealed(true)}><span>✦</span> {copy.reveal}</button>
             </div>
           ) : (
             <div className="wisdom-face">
               <p className="eyebrow">{copy.wisdom}</p>
-              <blockquote className={wisdomSize} lang={language === "tl" ? "fil" : "en"}>{currentWisdom}</blockquote>
+              <blockquote ref={wisdomTextRef} className={wisdomSize} lang={language === "tl" ? "fil" : "en"}>{currentWisdom}</blockquote>
               <p className="wisdom-note">{copy.note}</p>
               <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← {copy.back}</button>
             </div>

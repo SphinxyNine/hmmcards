@@ -78,14 +78,13 @@ button:focus-visible { outline: 3px solid #2f62ff; outline-offset: 3px; }
 .card-meta, .card-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 9px; font-weight: 900; letter-spacing: .13em; text-transform: uppercase; }
 .question-face, .wisdom-face { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; animation: face-in .28s ease both; }
 .eyebrow { margin: clamp(52px, 11svh, 100px) 0 13px; font-size: 10px; font-weight: 900; letter-spacing: .18em; }
-h1 { margin: 0; max-width: 11ch; max-height: min(43svh, 390px); overflow: auto; overflow-wrap: anywhere; hyphens: auto; scrollbar-width: none; font-family: Georgia, Times New Roman, serif; font-size: clamp(36px, 10.8vw, 60px); font-weight: 400; line-height: .98; letter-spacing: -.055em; }
-h1::-webkit-scrollbar, .wisdom-face blockquote::-webkit-scrollbar { display: none; }
+h1 { margin: 0; max-width: 11ch; max-height: min(43svh, 390px); overflow: hidden; overflow-wrap: anywhere; hyphens: auto; font-family: Georgia, Times New Roman, serif; font-size: clamp(36px, 10.8vw, 60px); font-weight: 400; line-height: .98; letter-spacing: -.055em; }
 h1.question-medium { max-width: 12ch; font-size: clamp(33px, 9.8vw, 54px); line-height: 1; }
 h1.question-long { max-width: 14ch; font-size: clamp(29px, 8.2vw, 45px); line-height: 1.02; }
 h1.question-xlong { max-width: 16ch; font-size: clamp(24px, 6.9vw, 38px); line-height: 1.06; }
 .wisdom { align-self: flex-start; margin: auto 0 28px; max-width: 100%; border: 0; border-bottom: 1px solid currentColor; background: transparent; padding: 0 0 5px; font-size: 12px; font-weight: 800; cursor: pointer; }
 .wisdom span { padding-right: 4px; }
-.wisdom-face blockquote { margin: 0; max-width: 24ch; max-height: min(43svh, 410px); overflow: auto; overflow-wrap: anywhere; hyphens: auto; scrollbar-width: none; font-family: Georgia, Times New Roman, serif; font-size: clamp(27px, 7.7vw, 42px); font-style: normal; line-height: 1.08; letter-spacing: -.04em; }
+.wisdom-face blockquote { margin: 0; max-width: 24ch; max-height: min(43svh, 410px); overflow: hidden; overflow-wrap: anywhere; hyphens: auto; font-family: Georgia, Times New Roman, serif; font-size: clamp(27px, 7.7vw, 42px); font-style: normal; line-height: 1.08; letter-spacing: -.04em; }
 .wisdom-face blockquote.wisdom-medium { max-width: 27ch; font-size: clamp(23px, 6.5vw, 35px); line-height: 1.12; }
 .wisdom-face blockquote.wisdom-long { max-width: 30ch; font-size: clamp(20px, 5.6vw, 30px); line-height: 1.16; }
 .wisdom-face blockquote.wisdom-xlong { max-width: 34ch; font-size: clamp(17px, 4.8vw, 26px); line-height: 1.2; }
