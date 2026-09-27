@@ -124,6 +124,17 @@ const shuffle = (items: number[]) => {
 };
 
 const STORAGE_KEY = "hmm-custom-questions-v1";
+const LANGUAGE_KEY = "hmm-language-v1";
+type Language = "en" | "tl";
+
+const categoryLabelsTl = ["Sarili", "Paglago", "Ugnayan", "Layunin", "Pananaw", "Damdamin", "Paniniwala", "Pagbabago", "Hinaharap", "Barkada"];
+const categoryNamesTl = ["Pagkilala sa Sarili", "Tapang at Paglago", "Ugnayan at Pagmamahal", "Kahulugan at Layunin", "Oras at Pananaw", "Damdamin at Tugon", "Pananaw sa Buhay", "Pagbabago sa Buhay", "Sarili at Hinaharap", "Barkada at Pasasalamat"];
+const cardCopy = {
+  en: { ask: "ASK THIS", reveal: "Reveal a little wisdom", wisdom: "A LITTLE WISDOM", note: "A thought to help the conversation go one layer deeper.", back: "Back to the question", slow: "NO RUSH.", pass: "PASS IT AROUND", next: "Next card", mix: "mix" },
+  tl: { ask: "PAG-USAPAN ITO", reveal: "Tingnan ang munting gabay", wisdom: "MUNTING GABAY", note: "Isang kaisipang makatutulong para mas lumalim at luminaw ang usapan.", back: "Bumalik sa tanong", slow: "DAHAN-DAHAN LANG.", pass: "IPASA SA KATABI", next: "Susunod na card", mix: "halo" },
+} as const;
+
+const isAvailableInLanguage = (question: Question, language: Language) => language === "en" || Boolean(question.textTl) || Boolean(question.custom);
 
 const categoryIndex = (value: unknown, fallback: number) => {
   if (typeof value === "number" && value >= 0 && value < categories.length) return value;
@@ -183,6 +194,7 @@ export default function Deck() {
   const [importCategory, setImportCategory] = useState(0);
   const [notice, setNotice] = useState("");
   const [isPresenting, setIsPresenting] = useState(false);
+  const [language, setLanguage] = useState<Language>("en");
   const touchStart = useRef(0);
 
   const allQuestions = useMemo(() => [...questions, ...customQuestions], [customQuestions]);
@@ -194,9 +206,11 @@ export default function Deck() {
       const parsed = raw ? JSON.parse(raw) : [];
       if (Array.isArray(parsed)) stored = parsed.filter((item) => item && typeof item.text === "string");
     } catch { /* An unreadable local deck should never block the built-in cards. */ }
+    const storedLanguage = window.localStorage.getItem(LANGUAGE_KEY) === "tl" ? "tl" : "en";
     const key = window.setTimeout(() => {
       setCustomQuestions(stored);
-      setDeck(shuffle([...questions, ...stored].map((_, i) => i)));
+      setLanguage(storedLanguage);
+      setDeck(shuffle([...questions, ...stored].map((question, i) => isAvailableInLanguage(question, storedLanguage) ? i : -1).filter((i) => i >= 0)));
     }, 0);
     return () => window.clearTimeout(key);
   }, []);
@@ -204,7 +218,12 @@ export default function Deck() {
   const current = allQuestions[deck[position] ?? 0] ?? questions[0];
   const category = categories[current.category];
   const palette = palettes[current.category];
-  const currentWisdom = current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
+  const currentText = language === "tl" && current.textTl ? current.textTl : current.text;
+  const currentWisdom = language === "tl"
+    ? current.wisdomTl || current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]
+    : current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
+  const copy = cardCopy[language];
+  const categoryLabel = language === "tl" ? categoryLabelsTl[current.category] : category[1];
 
   useEffect(() => {
     const onFullscreenChange = () => setIsPresenting(Boolean(document.fullscreenElement));
@@ -228,11 +247,18 @@ export default function Deck() {
     }, 180);
   };
 
-  const reshuffle = (chosen = selected, source = allQuestions) => {
-    const pool = source.map((q, i) => chosen.includes(q.category) ? i : -1).filter((i) => i >= 0);
-    setDeck(shuffle(pool));
+  const reshuffle = (chosen = selected, source = allQuestions, nextLanguage = language) => {
+    const pool = source.map((q, i) => chosen.includes(q.category) && isAvailableInLanguage(q, nextLanguage) ? i : -1).filter((i) => i >= 0);
+    const languagePool = source.map((q, i) => isAvailableInLanguage(q, nextLanguage) ? i : -1).filter((i) => i >= 0);
+    setDeck(shuffle(pool.length ? pool : languagePool));
     setPosition(0);
     setRevealed(false);
+  };
+
+  const changeLanguage = (nextLanguage: Language) => {
+    setLanguage(nextLanguage);
+    window.localStorage.setItem(LANGUAGE_KEY, nextLanguage);
+    reshuffle(selected, allQuestions, nextLanguage);
   };
 
   const saveCustomQuestions = (next: Question[]) => {
@@ -272,7 +298,7 @@ export default function Deck() {
 
   const clearCustomQuestions = () => {
     saveCustomQuestions([]);
-    setNotice("Custom cards cleared. The original 200 are still here.");
+    setNotice("Custom cards cleared. The built-in cards are still here.");
   };
 
   const toggleCategory = (id: number) => {
@@ -298,7 +324,11 @@ export default function Deck() {
           <span className="brand-note">QUESTIONS WORTH<br/>SITTING WITH</span>
         </div>
         <div className="header-actions">
-          <button className="present-button" type="button" onClick={togglePresentMode}><b>{isPresenting ? "×" : "⛶"}</b><span>{isPresenting ? "Exit" : "Present"}</span></button>
+          <div className="language-switch" role="group" aria-label="Question language">
+            <button className={language === "en" ? "active" : ""} type="button" aria-pressed={language === "en"} onClick={() => changeLanguage("en")}>EN</button>
+            <button className={language === "tl" ? "active" : ""} type="button" aria-pressed={language === "tl"} onClick={() => changeLanguage("tl")}>TL</button>
+          </div>
+          <button className="present-button" type="button" onClick={togglePresentMode}><b>{isPresenting ? "×" : "⛶"}</b><span>{isPresenting ? (language === "tl" ? "Lumabas" : "Exit") : (language === "tl" ? "I-presenta" : "Present")}</span></button>
           <button className="menu-button" type="button" aria-label="Open deck settings" onClick={() => { setSettingsOpen(true); setNotice(""); }}><span /><span /></button>
         </div>
       </header>
@@ -307,33 +337,33 @@ export default function Deck() {
         <div className="card-stack" aria-hidden="true"><i /><i /></div>
         <article className={`question-card ${moving ? `card-${moving}` : ""}`} aria-live="polite">
           <div className="card-meta">
-            <span>{current.custom ? "Custom" : String(current.category + 1).padStart(2, "0")} · {category[1]}</span>
+            <span>{current.custom ? (language === "tl" ? "Sariling card" : "Custom") : String(current.category + 1).padStart(2, "0")} · {categoryLabel}</span>
             <span>{position + 1} / {deck.length}</span>
           </div>
 
           {!revealed ? (
             <div className="question-face">
-              <p className="eyebrow">ASK THIS</p>
-              <h1>{current.text}</h1>
-              <button className="wisdom" type="button" onClick={() => setRevealed(true)}><span>✦</span> Reveal a little wisdom</button>
+              <p className="eyebrow">{copy.ask}</p>
+              <h1 className={currentText.length > 95 ? "question-long" : ""}>{currentText}</h1>
+              <button className="wisdom" type="button" onClick={() => setRevealed(true)}><span>✦</span> {copy.reveal}</button>
             </div>
           ) : (
             <div className="wisdom-face">
-              <p className="eyebrow">A LITTLE WISDOM</p>
+              <p className="eyebrow">{copy.wisdom}</p>
               <blockquote className={currentWisdom.length > 230 ? "wisdom-long" : ""}>{currentWisdom}</blockquote>
-              <p className="wisdom-note">A thought to help the conversation go one layer deeper.</p>
-              <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← Back to the question</button>
+              <p className="wisdom-note">{copy.note}</p>
+              <button className="wisdom" type="button" onClick={() => setRevealed(false)}>← {copy.back}</button>
             </div>
           )}
 
-          <div className="card-foot"><span>NO RUSH.</span><span>PASS IT AROUND ↗</span></div>
+          <div className="card-foot"><span>{copy.slow}</span><span>{copy.pass} ↗</span></div>
         </article>
       </section>
 
       <nav className="controls" aria-label="Deck controls">
         <button className="round-button" type="button" aria-label="Previous question" onClick={() => move("prev")} disabled={position === 0}>←</button>
-        <button className="next-button" type="button" onClick={() => move("next")}><span>Next card</span><b>→</b></button>
-        <button className="round-button shuffle-button" type="button" aria-label="Shuffle deck" onClick={() => reshuffle()}>↻<small>mix</small></button>
+        <button className="next-button" type="button" onClick={() => move("next")}><span>{copy.next}</span><b>→</b></button>
+        <button className="round-button shuffle-button" type="button" aria-label={language === "tl" ? "Haluin ang mga card" : "Shuffle deck"} onClick={() => reshuffle()}>↻<small>{copy.mix}</small></button>
       </nav>
 
       <div className="progress" aria-label={`${position + 1} of ${deck.length} cards`}><i style={{width: `${((position + 1) / deck.length) * 100}%`}} /></div>
@@ -357,14 +387,15 @@ export default function Deck() {
             <div className="sheet-content">
               {settingsTab === "mix" && (
                 <div className="tab-panel" role="tabpanel">
-                  <p className="panel-intro">Choose what kind of conversation you feel like having.</p>
+                  <p className="panel-intro">{language === "tl" ? "Piliin kung anong klaseng kuwentuhan ang gusto ninyo." : "Choose what kind of conversation you feel like having."}</p>
                   <div className="category-list">
                     {categories.map((cat, index) => {
-                      const count = 20 + customQuestions.filter((item) => item.category === index).length;
-                      return <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{cat[0]}</b><small>{count} questions</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>;
+                      const count = allQuestions.filter((item) => item.category === index && isAvailableInLanguage(item, language)).length;
+                      const name = language === "tl" ? categoryNamesTl[index] : cat[0];
+                      return <button key={cat[0]} className={selected.includes(index) ? "selected" : ""} onClick={() => toggleCategory(index)}><i style={{background: palettes[index][0]}} /><span><b>{name}</b><small>{count} {language === "tl" ? "tanong" : "questions"}</small></span><em>{selected.includes(index) ? "✓" : "+"}</em></button>;
                     })}
                   </div>
-                  <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>Shuffle {allQuestions.filter((item) => selected.includes(item.category)).length} cards <span>→</span></button>
+                  <button className="apply-button" onClick={() => { reshuffle(selected); setSettingsOpen(false); }}>{language === "tl" ? "Ihalo" : "Shuffle"} {allQuestions.filter((item) => selected.includes(item.category) && isAvailableInLanguage(item, language)).length} cards <span>→</span></button>
                 </div>
               )}
 
