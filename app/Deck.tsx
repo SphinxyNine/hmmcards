@@ -149,10 +149,136 @@ const isAvailableInLanguage = (question: Question, language: Language) => langua
 const categoryIndex = (value: unknown, fallback: number) => {
   if (typeof value === "number" && value >= 0 && value < categories.length) return value;
   if (typeof value === "string") {
-    const exact = categories.findIndex((category) => category.some((name) => name.toLowerCase() === value.toLowerCase()));
+    const exact = categories.findIndex((category, index) =>
+      [...category, categoryNamesTl[index], categoryLabelsTl[index]].some((name) => name.toLowerCase() === value.toLowerCase()),
+    );
     if (exact >= 0) return exact;
   }
   return fallback;
+};
+
+const normalizeImportedQuestion = (value: string, fallbackCategory: number) => {
+  const text = value.trim().replace(/^\d+[.)]\s*/, "");
+  const comma = text.indexOf(",");
+  if (comma < 1) return { text, category: fallbackCategory };
+
+  const possibleCategory = text.slice(0, comma).trim().toLowerCase();
+  const matchedCategory = categories.findIndex((names, index) =>
+    [...names, categoryNamesTl[index], categoryLabelsTl[index]].some((name) => name.toLowerCase() === possibleCategory),
+  );
+  const question = text.slice(comma + 1).trim();
+  return matchedCategory >= 0 && question ? { text: question, category: matchedCategory } : { text, category: fallbackCategory };
+};
+
+type WisdomTheme = {
+  test: RegExp;
+  en: readonly [string, string];
+  tl: readonly [string, string];
+};
+
+const wisdomThemes: WisdomTheme[] = [
+  {
+    test: /understand|misunderstood|personality|identity|authentic|sarili|pagkatao|personality|maintindihan|makilala|nami-misread/i,
+    en: ["Wanting to be understood is not asking people to read your mind; it is an invitation to know you more accurately.", "Name one part people often misread, then explain what context or care would help them see it clearly."],
+    tl: ["Ang gustong maintindihan ka ay hindi paghinging basahin nila ang isip mo; invitation ito para mas makilala ka nang tama.", "Name one part na madalas nilang nami-misread, then sabihin kung anong context o support ang makatutulong."],
+  },
+  {
+    test: /friend|friendship|barkada|kaibigan|tropa/i,
+    en: ["Friendship becomes deeper when people can update what they know about one another instead of holding on to an old version.", "Share one specific example and let your friends respond with curiosity before advice."],
+    tl: ["Lumalalim ang friendship kapag willing tayong i-update ang pagkakakilala natin sa isa’t isa, hindi kumapit sa lumang version.", "Mag-share ng isang specific example, then hayaan munang makinig at maging curious ang friends bago mag-advice."],
+  },
+  {
+    test: /family|parent|mother|father|sibling|pamilya|magulang|nanay|tatay|kapatid/i,
+    en: ["Family can know your history well and still need help understanding who you are now.", "Describe the present need clearly without forcing the whole family story into one conversation."],
+    tl: ["Puwedeng kabisado ng family ang history mo pero kailangan pa rin nilang makilala kung sino ka ngayon.", "Sabihin nang malinaw ang need mo today—hindi kailangang ayusin ang buong family story sa isang usapan."],
+  },
+  {
+    test: /boundar|limit|respect|consent|hangganan|respeto/i,
+    en: ["A boundary is not a punishment; it is clear information about what allows trust and connection to remain healthy.", "Say what you need, what you will do if the limit is crossed, and leave room for a respectful response."],
+    tl: ["Ang boundary ay hindi parusa; clear information ito tungkol sa kailangan para manatiling healthy ang trust at connection.", "Sabihin ang need mo, ano ang gagawin mo kapag nalampasan ang limit, at bigyan ng room ang respectful na response."],
+  },
+  {
+    test: /fear|afraid|anxious|worry|takot|pangamba|alala|kinakabahan/i,
+    en: ["Fear often predicts the hardest possible ending and calls it certainty. Treat it as information, not a verdict.", "Name the smallest safe action that would give you real evidence instead of another hour of imagining."],
+    tl: ["Mahilig ang fear na hulaan ang worst ending at tawagin itong certainty. Information siya, hindi final verdict.", "Name the smallest safe action na magbibigay ng totoong evidence kaysa isa pang oras ng pag-o-overthink."],
+  },
+  {
+    test: /hurt|pain|heal|trauma|sakit|nasaktan|hilom|healing/i,
+    en: ["Healing is not proving the pain no longer matters; it is gaining more choice in how you carry and respond to it.", "Notice what feels safer or freer now, even if the progress looks smaller than the wound."],
+    tl: ["Ang healing ay hindi pagpapatunay na wala nang sakit; unti-unti itong pagkakaroon ng choice sa pagdala at pagharap dito.", "Notice kung ano ang mas safe o mas malaya ngayon, kahit mukhang mas maliit ang progress kaysa sa sugat."],
+  },
+  {
+    test: /forgiv|apolog|sorry|repair|patawad|sorry|pagbati|magkaayos/i,
+    en: ["Repair needs more than the right words: it needs a clear naming of harm, changed behavior, and patience with the other person’s timeline.", "Ask what accountability would look like now rather than trying to erase what happened."],
+    tl: ["Mas higit sa tamang words ang repair: kailangan ang malinaw na pag-amin sa harm, changed behavior, at respeto sa timeline ng kabilang tao.", "Ask kung ano ang accountability ngayon kaysa piliting burahin ang nangyari."],
+  },
+  {
+    test: /love|relationship|partner|romantic|pag-ibig|minamahal|jowa|relasyon/i,
+    en: ["Love is easier to recognize as a pattern than as a promise: look at how care behaves during ordinary days, conflict, and inconvenience.", "Name the action that makes affection feel trustworthy to you, not only exciting."],
+    tl: ["Mas madaling makilala ang love bilang pattern kaysa promise—tingnan kung paano ito kumikilos sa ordinary days, conflict, at inconvenience.", "Name the action na nagpaparamdam na trustworthy ang affection, hindi lang exciting."],
+  },
+  {
+    test: /future|dream|goal|hope|pangarap|hinaharap|balang araw|gusto mong maging/i,
+    en: ["A future becomes less intimidating when it stops being one giant destination and becomes a direction you can practice today.", "Choose one small move that your future self would recognize as genuine preparation."],
+    tl: ["Mas hindi nakaka-overwhelm ang future kapag hindi na ito isang giant destination kundi direction na puwedeng simulan today.", "Choose one small move na makikilala ng future self mo bilang totoong preparation."],
+  },
+  {
+    test: /change|growth|improve|better|learn|pagbabago|lumago|matuto|pinagbubuti|i-improve/i,
+    en: ["Growth lasts longer when it comes from honest practice instead of dislike for who you are today.", "Turn the quality you named into one repeatable behavior small enough to try this week."],
+    tl: ["Mas tumatagal ang growth kapag galing ito sa honest practice, hindi sa pagkamuhi sa kung sino ka today.", "Gawing isang repeatable behavior ang quality na binanggit mo—small enough para masubukan this week."],
+  },
+  {
+    test: /regret|mistake|failure|wrong|pagkakamali|kabiguan|maling desisyon|pagsisisi/i,
+    en: ["A mistake becomes wisdom when you keep the lesson without turning the old version of you into a permanent enemy.", "Name what you would choose differently now and the practice that can make that choice more likely."],
+    tl: ["Nagiging wisdom ang mistake kapag dala mo ang lesson pero hindi mo ginagawang permanent enemy ang dating ikaw.", "Name kung ano ang pipiliin mo differently ngayon at anong practice ang tutulong para magawa iyon."],
+  },
+  {
+    test: /happy|joy|fun|laugh|smile|saya|tawa|ngiti|masaya/i,
+    en: ["Joy is not a distraction from a meaningful life; it is part of the evidence that you are present for it.", "Notice the people, pace, and conditions around that joy so you can make room for it again."],
+    tl: ["Hindi distraction ang joy sa meaningful life; evidence din ito na present ka sa buhay mo.", "Notice ang people, pace, at conditions sa paligid ng saya para makagawa ka ulit ng room para rito."],
+  },
+  {
+    test: /grateful|gratitude|thank|appreciat|pasalamat|salamat|pinahahalagahan/i,
+    en: ["Gratitude becomes powerful when it is specific enough for another person to understand what their presence changed.", "Name the moment, the effect it had on you, and why you still carry it."],
+    tl: ["Mas powerful ang gratitude kapag specific enough para maintindihan ng tao kung ano ang nabago ng presence niya.", "Name the moment, ang effect nito sa’yo, at bakit dala mo pa rin hanggang ngayon."],
+  },
+  {
+    test: /angry|anger|mad|galit|inis|irita/i,
+    en: ["Anger often protects a value, a boundary, or a softer hurt. Understanding its job helps you use its energy without passing the harm onward.", "Ask what needs protection or repair before deciding what action matches your values."],
+    tl: ["Madalas may pinoprotektahang value, boundary, o mas malambot na sakit ang anger. Kapag alam mo ang trabaho nito, hindi mo kailangang ipasa ang harm.", "Ask kung ano ang kailangang protektahan o ayusin bago pumili ng action na tugma sa values mo."],
+  },
+  {
+    test: /memory|remember|forget|alaala|maalala|malimutan/i,
+    en: ["A memory matters not only because of what happened, but because of what it taught you to value afterward.", "Tell one sensory detail, then name the lesson or feeling you hope survives the story."],
+    tl: ["Mahalaga ang memory hindi lang dahil sa nangyari kundi dahil sa itinuro nitong pahalagahan mo afterward.", "Magkuwento ng isang sensory detail, then name the lesson o feeling na gusto mong manatili."],
+  },
+  {
+    test: /purpose|meaning|matter|why|layunin|kahulugan|saysay/i,
+    en: ["Purpose is often quieter than a grand calling; it can be the repeated way you make life more honest, useful, or kind.", "Look for the value underneath your answer and one ordinary place where you can live it now."],
+    tl: ["Madalas mas tahimik ang purpose kaysa grand calling; puwede itong paulit-ulit na paraan ng paggawa ng buhay na mas honest, useful, o kind.", "Hanapin ang value sa ilalim ng sagot at isang ordinary place kung saan maisasabuhay mo ito now."],
+  },
+  {
+    test: /support|help|need|trust|safe|tulong|kailangan|tiwala|ligtas|suporta/i,
+    en: ["Support works best when it is described, not guessed. Different moments may need listening, practical help, reassurance, or simply company.", "Say what would help most and what well-meant response tends to make things harder."],
+    tl: ["Mas gumagana ang support kapag dini-describe, hindi hinuhulaan. Minsan listening, practical help, reassurance, o simpleng company ang kailangan.", "Sabihin kung ano ang pinaka-helpful at anong well-meant response ang mas nagpapahirap."],
+  },
+];
+
+const contextualWisdomFor = (question: Question, language: Language) => {
+  const source = `${question.text} ${question.textTl ?? ""}`;
+  const matches = wisdomThemes.filter((theme) => theme.test.test(source));
+  const primary = matches[0];
+  const secondary = matches[1];
+
+  if (!primary) {
+    return language === "tl"
+      ? "Mas nagiging meaningful ang sagot kapag hindi lang label ang ibinibigay. Mag-share ng isang real moment, ano ang itinuro nito sa’yo, at ano ang gusto mong dalhin forward."
+      : "An answer becomes more meaningful when it moves beyond a label. Share one real moment, what it taught you, and what you want to carry forward.";
+  }
+
+  const primaryCopy = primary[language];
+  const practiceCopy = (secondary ?? primary)[language][1];
+  return `${primaryCopy[0]} ${practiceCopy}`;
 };
 
 const parseQuestionSet = (source: string, fallbackCategory: number): Question[] => {
@@ -161,11 +287,12 @@ const parseQuestionSet = (source: string, fallbackCategory: number): Question[] 
 
   const makeQuestion = (text: unknown, answer: unknown, category: unknown, index: number): Question | null => {
     if (typeof text !== "string" || !text.trim()) return null;
+    const normalized = normalizeImportedQuestion(text, fallbackCategory);
     return {
       id: Date.now() + index,
-      text: text.trim().replace(/^\d+[.)]\s*/, ""),
+      text: normalized.text,
       wisdom: typeof answer === "string" && answer.trim() ? answer.trim() : undefined,
-      category: categoryIndex(category, fallbackCategory),
+      category: categoryIndex(category, normalized.category),
       custom: true,
     };
   };
@@ -217,7 +344,13 @@ export default function Deck() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : [];
-      if (Array.isArray(parsed)) stored = parsed.filter((item) => item && typeof item.text === "string");
+      if (Array.isArray(parsed)) {
+        stored = parsed.filter((item) => item && typeof item.text === "string").map((item: Question) => {
+          const normalized = normalizeImportedQuestion(item.text, categoryIndex(item.category, 0));
+          return { ...item, text: normalized.text, category: normalized.category };
+        });
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+      }
     } catch { /* An unreadable local deck should never block the built-in cards. */ }
     const storedLanguage = window.localStorage.getItem(LANGUAGE_KEY) === "tl" ? "tl" : "en";
     const key = window.setTimeout(() => {
@@ -233,8 +366,8 @@ export default function Deck() {
   const palette = palettes[current.category];
   const currentText = language === "tl" && current.textTl ? current.textTl : current.text;
   const currentWisdom = language === "tl"
-    ? current.wisdomTl || current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]
-    : current.wisdom || questionWisdom[current.id] || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
+    ? current.wisdomTl || current.wisdom || questionWisdom[current.id] || contextualWisdomFor(current, language) || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length]
+    : current.wisdom || questionWisdom[current.id] || contextualWisdomFor(current, language) || wisdom[current.category][Math.abs(current.id - 1) % wisdom[current.category].length];
   const questionSize = currentText.length > 150 ? "question-xlong" : currentText.length > 95 ? "question-long" : currentText.length > 65 ? "question-medium" : "";
   const wisdomSize = currentWisdom.length > 380 ? "wisdom-xlong" : currentWisdom.length > 260 ? "wisdom-long" : currentWisdom.length > 180 ? "wisdom-medium" : "";
   const copy = cardCopy[language];
